@@ -404,3 +404,26 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+.idea/
+./idea/*
+
+# Security - Environment Variables and Secrets
+.env
+.env.local
+.env.production
+.env.staging
+appsettings.Production.json
+appsettings.Staging.json
+secrets.json
+*.secrets.json
+
+# Docker Compose override files (may contain secrets)
+docker-compose.override.yml
+docker-compose.production.yml
+docker-compose.staging.yml
+
+# Temporary files with potentially sensitive data
+*.tmp
+*.temp
+*~
+.DS_Store
