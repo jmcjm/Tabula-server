@@ -1,0 +1,48 @@
+name: "tabulaCompose"
+services:
+  postgres:
+    image: "docker.io/library/postgres:17.4"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: "${DBUSERNAME}"
+      POSTGRES_PASSWORD: "${DBPASSWD}"
+      POSTGRES_DB: "tabula_main"
+    ports:
+      - "8000:5432"
+    networks:
+      - "aspire"
+    restart: "always"
+    labels:
+      app: "tabula"
+      service: "database"
+  apiservice:
+    image: "${APISERVICE_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "8001"
+      ConnectionStrings__TabulaDb: "Host=postgres;Port=5432;Username=${DBUSERNAME};Password=${DBPASSWD};Database=TabulaDb"
+      ConnectionStrings__IdentityDb: "Host=postgres;Port=5432;Username=${DBUSERNAME};Password=${DBPASSWD};Database=IdentityDb"
+      ADMIN_USERNAME: "${ADMINUSERNAME}"
+      ADMIN_EMAIL: "${ADMINEMAIL}"
+      ADMIN_PASSWORD: "${ADMINPASSWORD}"
+      JwtSettings__Key: "${JWTKEY}"
+      ASPNETCORE_ENVIRONMENT: "Production"
+    ports:
+      - "8002:8001"
+      - "8004:8003"
+    depends_on:
+      postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+    restart: "unless-stopped"
+    labels:
+      app: "tabula"
+      service: "api"
+networks:
+  aspire:
+    driver: "bridge"

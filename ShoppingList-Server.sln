@@ -1,0 +1,57 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tabula.AppHost", "Tabula.AppHost\Tabula.AppHost.csproj", "{3E5AD31D-09E4-402E-BA72-4147C320F556}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tabula.ServiceDefaults", "Tabula.ServiceDefaults\Tabula.ServiceDefaults.csproj", "{BEB3E2FA-E4F6-A271-A0B5-3605A1C52FA8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{80540CDF-893C-4E0F-A771-1DCC5CE5313D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{2784F8DB-0B63-4155-8AF1-792A7128E67E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tabula.Infrastructure.DataAccess", "Tabula.Infrastructure.DataAccess\Tabula.Infrastructure.DataAccess.csproj", "{19B65C68-900F-47AE-A4ED-853E665AD3CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tabula.Services.WebApi", "Tabula.Services.WebApi\Tabula.Services.WebApi.csproj", "{73FCBAC3-931A-4506-8F91-201D6FB73ACF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tabula.Infrastructure.Identity", "Tabula.Infrastructure.Identity\Tabula.Infrastructure.Identity.csproj", "{D35C48A4-4B33-424E-81EC-2AB1CE592434}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E5AD31D-09E4-402E-BA72-4147C320F556}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E5AD31D-09E4-402E-BA72-4147C320F556}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E5AD31D-09E4-402E-BA72-4147C320F556}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E5AD31D-09E4-402E-BA72-4147C320F556}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEB3E2FA-E4F6-A271-A0B5-3605A1C52FA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEB3E2FA-E4F6-A271-A0B5-3605A1C52FA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEB3E2FA-E4F6-A271-A0B5-3605A1C52FA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEB3E2FA-E4F6-A271-A0B5-3605A1C52FA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19B65C68-900F-47AE-A4ED-853E665AD3CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19B65C68-900F-47AE-A4ED-853E665AD3CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19B65C68-900F-47AE-A4ED-853E665AD3CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19B65C68-900F-47AE-A4ED-853E665AD3CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73FCBAC3-931A-4506-8F91-201D6FB73ACF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73FCBAC3-931A-4506-8F91-201D6FB73ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73FCBAC3-931A-4506-8F91-201D6FB73ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73FCBAC3-931A-4506-8F91-201D6FB73ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D35C48A4-4B33-424E-81EC-2AB1CE592434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D35C48A4-4B33-424E-81EC-2AB1CE592434}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D35C48A4-4B33-424E-81EC-2AB1CE592434}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D35C48A4-4B33-424E-81EC-2AB1CE592434}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4E41CC3D-BF50-42B5-98D2-3AD26444A7D0}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{19B65C68-900F-47AE-A4ED-853E665AD3CE} = {80540CDF-893C-4E0F-A771-1DCC5CE5313D}
+		{73FCBAC3-931A-4506-8F91-201D6FB73ACF} = {2784F8DB-0B63-4155-8AF1-792A7128E67E}
+		{D35C48A4-4B33-424E-81EC-2AB1CE592434} = {80540CDF-893C-4E0F-A771-1DCC5CE5313D}
+	EndGlobalSection
+EndGlobal
