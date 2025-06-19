@@ -30,22 +30,23 @@ The project is built with .NET 9, ASP.NET Core, Entity Framework Core, and Postg
 
 ## Project Structure 📁
 
-The solution is organized into the following projects:
+The solution follows **Domain-Driven Design (DDD)** principles and is organized into the following layers:
 
+### 🏗️ Architecture Layers
+*   `Tabula.Domain/`: **Pure domain layer** - Contains domain entities, value objects, aggregates, and business rules (no external dependencies).
+*   `Tabula.Application/`: **Application layer** - CQRS commands/queries, MediatR handlers, and application services.
+*   `Tabula.Infrastructure/`: **Infrastructure layer** - Data access, external services, EF Core repositories, and Identity.
+*   `Tabula.Presentation/`: **Presentation layer** - ASP.NET Core Web API with Minimal API endpoints.
+
+### 🚀 Host & Configuration
 *   `Tabula.AppHost/`: .NET Aspire application host for orchestrating services during development.
 *   `Tabula.ServiceDefaults/`: Common service configurations (logging, telemetry, health checks).
-*   `Tabula.Services.WebApi/`: The main ASP.NET Core Web API project.
-    *   `Endpoints/`: Contains Minimal API endpoint definitions.
-*   `Tabula.Infrastructure.DataAccess/`: Handles data access logic.
-    *   `Database/`: EF Core DbContext (`ShoppingListDbContext`).
-    *   `Entities/`: Domain entities.
-    *   `Repositories/`: Repository pattern implementations.
-    *   `Configurations/`: EF Core entity type configurations.
-    *   `Mappers/`: Object mapping logic.
-*   `Tabula.Infrastructure.Identity/`: Manages user authentication and authorization.
-    *   `Database/`: EF Core DbContext for Identity (`IdentityDatabaseContext`).
-    *   `Services/`: `TokenService` for JWT generation.
-    *   `Endpoints/`: Identity-related Minimal API endpoints.
+
+### 📦 Legacy Projects (Phase 2+ Migration)
+*   `Tabula.Infrastructure.DataAccess/`: *[Being migrated to Tabula.Infrastructure]*
+*   `Tabula.Infrastructure.Identity/`: *[Being migrated to Tabula.Infrastructure]*
+
+**🔄 Migration Status:** Currently in Phase 1 - Solution restructure complete. Domain entities and business logic will be moved to their respective DDD layers in subsequent phases.
 
 ## Getting Started 🚀
 
@@ -141,7 +142,7 @@ The `Tabula.AppHost/docker-compose.yaml` file is designed to be used by Aspire f
     ```bash
     # Ensure APISERVICE_IMAGE in Tabula.AppHost/.env matches the tag you use here
     # e.g., if APISERVICE_IMAGE=apiservice:latest
-    docker build -t apiservice:latest -f Tabula.Services.WebApi/Dockerfile .
+    docker build -t apiservice:latest -f Tabula.Presentation/Dockerfile .
     ```
 
 2.  **✅ Ensure your `Tabula.AppHost/.env` file is correctly configured (see Configuration section).**
