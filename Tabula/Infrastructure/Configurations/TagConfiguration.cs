@@ -36,6 +36,10 @@ public class TagConfiguration : IEntityTypeConfiguration<TagDbModel>
             .IsUnique()
             .HasDatabaseName("IX_Tags_UserId_Name_Unique");
         
+        builder.HasIndex(t => new { t.Id, t.UserId })
+            .IsUnique()
+            .HasDatabaseName("IX_Tags_Id_UserId_Unique");
+        
         builder.HasMany(t => t.ShoppingLists)
             .WithMany(s => s.Tags)
             .UsingEntity<Dictionary<string, object>>(

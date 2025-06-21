@@ -1,4 +1,7 @@
+using Domain.Errors;
 using Domain.Records;
+using Domain.Validations;
+using ErrorOr;
 
 namespace Domain.Entities;
 
@@ -6,11 +9,13 @@ public class ItemEntity
 {
     public ItemId Id { get; private set; }
     public string ProductName { get; private set; }
-    public int Quantity { get; private set; }
+    public ushort Quantity { get; private set; }
     public bool Bought { get; private set; }
     public ShoppingListId ShoppingListId { get; private set; }
     
-    public ItemEntity(string productName, int quantity, bool bought, ShoppingListId shoppingListId, ItemId? id)
+    private const byte MaxProductNameLength = 50;
+    
+    private ItemEntity(string productName, ushort quantity, bool bought, ShoppingListId shoppingListId, ItemId? id)
     {
         Id = id ?? new ItemId(Guid.NewGuid());
         ProductName = productName;
@@ -19,7 +24,39 @@ public class ItemEntity
         ShoppingListId = shoppingListId;
     }
     
-    public void UpdateQuantity(int quantity)
+    public static ErrorOr<ItemEntity> Create(string productName, ushort quantity, bool bought, ShoppingListId shoppingListId)
+    {
+        var productNameValidation = DomainValidators.NameValidator(productName, MaxProductNameLength);
+        
+        if (productNameValidation.IsError) return productNameValidation.Errors;
+
+        var entity = new ItemEntity(
+            productName: productName.Trim(),
+            quantity: quantity,
+            bought: bought,
+            shoppingListId: shoppingListId,
+            id: null);
+
+        return entity;
+    }
+    
+    public static ErrorOr<ItemEntity> Restore(ItemId id, string productName, ushort quantity, bool bought, ShoppingListId shoppingListId) 
+    {
+        var productNameValidation = DomainValidators.NameValidator(productName, MaxProductNameLength);
+        
+        if (productNameValidation.IsError) return productNameValidation.Errors;
+
+        var entity = new ItemEntity(
+            productName: productName.Trim(),
+            quantity: quantity,
+            bought: bought,
+            shoppingListId: shoppingListId,
+            id: id);
+
+        return entity;
+    }
+    
+    public void UpdateQuantity(ushort quantity)
     {
         Quantity = quantity;
     }
@@ -29,8 +66,13 @@ public class ItemEntity
         Bought = bought;
     }
     
-    public void UpdateName(string productName)
+    public ErrorOr<Success> UpdateName(string productName)
     {
-        ProductName = productName;
+        var validation = DomainValidators.NameValidator(productName, MaxProductNameLength);
+        
+        if (validation.IsError) return validation.Errors;
+
+        ProductName = productName.Trim();
+        return Result.Success;
     }
 }

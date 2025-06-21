@@ -15,5 +15,4 @@ public interface IShareRepository
     Task<ErrorOr<Success>> AddAsync(ShareEntity shareEntity);
     Task<ErrorOr<Success>> UpdateAsync(ShareEntity shareEntity);
     Task<ErrorOr<Success>> DeleteAsync(ShareId id);
-    Task<bool> HasPermissionAsync(UserId userId, ShoppingListId shoppingListId, SharePermission requiredPermission);
 } 

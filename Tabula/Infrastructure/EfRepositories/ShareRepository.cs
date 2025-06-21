@@ -47,9 +47,4 @@ public class ShareRepository : IShareRepository
     {
         throw new NotImplementedException();
     }
-
-    public Task<bool> HasPermissionAsync(UserId userId, ShoppingListId shoppingListId, SharePermission requiredPermission)
-    {
-        throw new NotImplementedException();
-    }
 }
