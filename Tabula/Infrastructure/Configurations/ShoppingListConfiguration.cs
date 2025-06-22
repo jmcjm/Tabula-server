@@ -21,6 +21,15 @@ public class ShoppingListConfiguration : IEntityTypeConfiguration<ShoppingListDb
             .HasColumnName("UserId")
             .IsRequired();
 
-        builder.HasIndex(s => s.Name);
+        builder.HasIndex(t => t.UserId)
+            .HasDatabaseName("IX_Tags_UserId");
+        
+        builder.HasIndex(t => new { t.UserId, t.Name })
+            .IsUnique()
+            .HasDatabaseName("IX_Tags_UserId_Name_Unique");
+        
+        builder.HasIndex(t => new { t.Id, t.UserId })
+            .IsUnique()
+            .HasDatabaseName("IX_Tags_Id_UserId_Unique");
     }
 }

@@ -40,7 +40,6 @@ public class TagService(ITagRepository tagRepository)
         var updateResult = await tagRepository.UpdateAsync(tag, cancellationToken);
         return updateResult.IsError ? updateResult.Errors : tag;
     }
-
     
     public async Task<ErrorOr<Deleted>> DeleteTagAsync(DeleteTagCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
