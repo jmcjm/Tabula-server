@@ -1,12 +1,13 @@
 using Application.Commands;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Records;
 using ErrorOr;
 
 namespace Application.Services;
 
-public class ShoppingListService(IShoppingListRepository shoppingListRepository)
+public class ShoppingListService(IShoppingListRepository shoppingListRepository, IShareRepository shareRepository)
 {
     public async Task<ErrorOr<ShoppingListEntity>> CreateShoppingListAsync(CreateShoppingListCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
@@ -23,13 +24,13 @@ public class ShoppingListService(IShoppingListRepository shoppingListRepository)
     
     public async Task<ErrorOr<ShoppingListEntity>> UpdateShoppingListAsync(UpdateShoppingListCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
-        // We query the DB by Id and UserId (which we supply from JWT),
-        // so the user cannot access or update shopping lists they do not own.
-        var shoppingListResult = await shoppingListRepository.GetByIdAndUserIdAsync(command.Id, userId, cancellationToken);
-        if (shoppingListResult.IsError)
-            return shoppingListResult.Errors;
-
-        var shoppingList = shoppingListResult.Value;
+        var authorizationResult = await CheckPermissionsAndGetShoppingListAsync(
+            command.Id, userId, SharePermission.Modify, cancellationToken);
+        
+        if (authorizationResult.IsError)
+            return authorizationResult.Errors;
+        
+        var shoppingList = authorizationResult.Value;
 
         var nameUpdateResult = shoppingList.UpdateName(command.Name);
         if (nameUpdateResult.IsError)
@@ -41,11 +42,69 @@ public class ShoppingListService(IShoppingListRepository shoppingListRepository)
     
     public async Task<ErrorOr<Deleted>> DeleteShoppingListAsync(DeleteShoppingListCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
-        var shoppingListResult = await shoppingListRepository.GetByIdAndUserIdAsync(command.Id, userId, cancellationToken);
-        if (shoppingListResult.IsError)
-            return shoppingListResult.Errors;
+        var authorizationResult = await CheckPermissionsAndGetShoppingListAsync(
+            command.Id, userId, SharePermission.Admin, cancellationToken);
+        
+        if (authorizationResult.IsError)
+            return authorizationResult.Errors;
 
         var deleteResult = await shoppingListRepository.DeleteAsync(command.Id, cancellationToken: cancellationToken);
         return deleteResult.IsError ? deleteResult.Errors : Result.Deleted;
+    }
+    
+    public async Task<ErrorOr<ShoppingListEntity>> CheckPermissionsAndGetShoppingListAsync(
+        ShoppingListId shoppingListId, 
+        UserId userId, 
+        SharePermission requiredPermission,
+        CancellationToken cancellationToken = default)
+    {
+        var shoppingListResult = await shoppingListRepository.GetByIdAsync(shoppingListId, cancellationToken);
+        if (shoppingListResult.IsError)
+            return shoppingListResult.Errors;
+
+        var shoppingList = shoppingListResult.Value;
+
+        // Owner has all permissions
+        if (shoppingList.UserId == userId)
+            return shoppingList;
+
+        // Check share permissions
+        var shareResults = await shareRepository.GetShareAsync(shoppingListId, userId, cancellationToken);
+        
+        if (shareResults.IsError)
+            return shareResults.Errors;
+
+        var share = shareResults.Value;
+        
+        // Check if user has required permission level
+        if (!HasRequiredPermission(share.Permission, requiredPermission))
+            return Error.Forbidden(
+                code: "ShoppingList.Forbidden", 
+                description: GetPermissionErrorMessage(requiredPermission));
+
+        return shoppingList;
+    }
+
+    private static bool HasRequiredPermission(SharePermission userPermission, SharePermission requiredPermission)
+    {
+        // Admin can do everything, Modify can read and write, Read can only read
+        return requiredPermission switch
+        {
+            SharePermission.Read => userPermission >= SharePermission.Read,
+            SharePermission.Modify => userPermission >= SharePermission.Modify,
+            SharePermission.Admin => userPermission == SharePermission.Admin,
+            _ => false
+        };
+    }
+
+    private static string GetPermissionErrorMessage(SharePermission requiredPermission)
+    {
+        return requiredPermission switch
+        {
+            SharePermission.Read => "You do not have permission to view this shopping list.",
+            SharePermission.Modify => "You do not have permission to modify this shopping list.",
+            SharePermission.Admin => "You do not have permission to perform administrative actions on this shopping list.",
+            _ => "You do not have sufficient permissions for this operation."
+        };
     }
 }

@@ -7,12 +7,14 @@ namespace Domain.Interfaces;
 
 public interface IShareRepository
 {
-    Task<ErrorOr<ShareEntity>> GetByIdAsync(ShareId id);
-    Task<List<ShareEntity>> GetSharedWithUserAsync(UserId userId);
-    Task<List<ShareEntity>> GetSharedByUserAsync(UserId userId);
-    Task<List<ShareEntity>> GetSharesForShoppingListAsync(ShoppingListId shoppingListId);
-    Task<ShareEntity?> GetShareAsync(ShoppingListId shoppingListId, UserId userId);
-    Task<ErrorOr<Success>> AddAsync(ShareEntity shareEntity);
-    Task<ErrorOr<Success>> UpdateAsync(ShareEntity shareEntity);
-    Task<ErrorOr<Success>> DeleteAsync(ShareId id);
+    Task<ErrorOr<ShareEntity>> GetByIdAsync(ShareId id, CancellationToken cancellationToken = default);
+    Task<List<ShareEntity>> GetSharedWithUserAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<List<ShareEntity>> GetSharedByUserAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<List<ShareEntity>> GetSharesForShoppingListAsync(ShoppingListId shoppingListId, CancellationToken cancellationToken = default);
+    
+    // TODO: Rename
+    Task<ErrorOr<ShareEntity>> GetShareAsync(ShoppingListId shoppingListId, UserId userId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<Success>> AddAsync(ShareEntity shareEntity, CancellationToken cancellationToken = default);
+    Task<ErrorOr<Success>> UpdateAsync(ShareEntity shareEntity, CancellationToken cancellationToken = default);
+    Task<ErrorOr<Success>> DeleteAsync(ShareId id, CancellationToken cancellationToken = default);
 } 

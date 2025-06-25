@@ -256,7 +256,7 @@ public static class TagsEndpoints
 
         try
         {
-            // Sprawdź czy użytkownik ma dostęp do listy (ReadOnly wystarczy)
+            // Sprawdź czy użytkownik ma dostęp do listy (Read wystarczy)
             if (!await shareRepository.HasPermissionAsync(currentUserId, shoppingListId, SharePermission.ReadOnly))
                 return TypedResults.Forbid();
 
