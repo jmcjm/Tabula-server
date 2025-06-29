@@ -1,4 +1,5 @@
 using Application.Commands;
+using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
@@ -7,7 +8,7 @@ using ErrorOr;
 
 namespace Application.Services;
 
-public class ShoppingListService(IShoppingListRepository shoppingListRepository, IShareRepository shareRepository)
+public class ShoppingListService(IShoppingListRepository shoppingListRepository, IShareRepository shareRepository) : IShoppingListService
 {
     public async Task<ErrorOr<ShoppingListEntity>> CreateShoppingListAsync(CreateShoppingListCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
@@ -25,7 +26,7 @@ public class ShoppingListService(IShoppingListRepository shoppingListRepository,
     public async Task<ErrorOr<ShoppingListEntity>> UpdateShoppingListAsync(UpdateShoppingListCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
         var authorizationResult = await CheckPermissionsAndGetShoppingListAsync(
-            command.Id, userId, SharePermission.Modify, cancellationToken);
+            command.Id, userId, SharePermission.Modify, cancellationToken: cancellationToken);
         
         if (authorizationResult.IsError)
             return authorizationResult.Errors;
@@ -43,7 +44,7 @@ public class ShoppingListService(IShoppingListRepository shoppingListRepository,
     public async Task<ErrorOr<Deleted>> DeleteShoppingListAsync(DeleteShoppingListCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
         var authorizationResult = await CheckPermissionsAndGetShoppingListAsync(
-            command.Id, userId, SharePermission.Admin, cancellationToken);
+            command.Id, userId, SharePermission.Admin, cancellationToken:cancellationToken);
         
         if (authorizationResult.IsError)
             return authorizationResult.Errors;
@@ -56,6 +57,7 @@ public class ShoppingListService(IShoppingListRepository shoppingListRepository,
         ShoppingListId shoppingListId, 
         UserId userId, 
         SharePermission requiredPermission,
+        bool checkOwner = true,
         CancellationToken cancellationToken = default)
     {
         var shoppingListResult = await shoppingListRepository.GetByIdAsync(shoppingListId, cancellationToken);
@@ -64,6 +66,16 @@ public class ShoppingListService(IShoppingListRepository shoppingListRepository,
 
         var shoppingList = shoppingListResult.Value;
 
+        switch (checkOwner)
+        {
+            case true when shoppingList.UserId == userId:
+                return shoppingList;
+            case true:
+                return Error.Forbidden(
+                    code: "ShoppingList.Forbidden", 
+                    description: "You do not have permissions to perform those actions on this shopping list.");
+        }
+        
         // Owner has all permissions
         if (shoppingList.UserId == userId)
             return shoppingList;

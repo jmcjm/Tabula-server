@@ -1,4 +1,5 @@
 using Application.Commands;
+using Application.Interfaces;
 using Domain.Interfaces;
 using Domain.Entities;
 using Domain.Records;
@@ -6,7 +7,7 @@ using ErrorOr;
 
 namespace Application.Services;
 
-public class TagService(ITagRepository tagRepository)
+public class TagService(ITagRepository tagRepository) : ITagService
 {
     public async Task<ErrorOr<TagEntity>> CreateTagAsync(CreateTagCommand command, UserId userId, CancellationToken cancellationToken = default)
     {

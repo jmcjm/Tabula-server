@@ -1,4 +1,5 @@
 using Application.Commands;
+using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
@@ -7,12 +8,12 @@ using ErrorOr;
 
 namespace Application.Services;
 
-public class ItemService(IItemRepository itemRepository, ShoppingListService shoppingListService)
+public class ItemService(IItemRepository itemRepository, IShoppingListService shoppingListService) : IItemService
 {
     public async Task<ErrorOr<ItemEntity>> AddItemAsync(AddItemCommand command, UserId userId, CancellationToken cancellationToken = default)
     {
         var authorizationResult = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(
-                command.ShoppingListId, userId, SharePermission.Modify, cancellationToken);
+                command.ShoppingListId, userId, SharePermission.Modify, cancellationToken: cancellationToken);
         
         if (authorizationResult.IsError)
             return authorizationResult.Errors;
@@ -37,7 +38,7 @@ public class ItemService(IItemRepository itemRepository, ShoppingListService sho
         var item = itemResult.Value;
         
         var authorizationResult = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(
-            item.ShoppingListId, userId, SharePermission.Modify, cancellationToken);
+            item.ShoppingListId, userId, SharePermission.Modify, cancellationToken: cancellationToken);
         
         if (authorizationResult.IsError)
             return authorizationResult.Errors;
@@ -67,7 +68,7 @@ public class ItemService(IItemRepository itemRepository, ShoppingListService sho
         var item = itemResult.Value;
         
         var authorizationResult = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(
-            item.ShoppingListId, userId, SharePermission.Admin, cancellationToken);
+            item.ShoppingListId, userId, SharePermission.Admin, cancellationToken: cancellationToken);
         
         if (authorizationResult.IsError)
             return authorizationResult.Errors;
