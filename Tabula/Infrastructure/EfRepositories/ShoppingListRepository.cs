@@ -5,7 +5,7 @@ using ErrorOr;
 
 namespace Infrastructure.EfRepositories;
 
-public class ShoppingListRepository : IShoppingListRepository
+public class ShoppingListRepository() : IShoppingListRepository
 {
     public Task<ErrorOr<ShoppingListEntity>> GetByIdAsync(ShoppingListId id, CancellationToken cancellationToken = default)
     {
@@ -22,7 +22,7 @@ public class ShoppingListRepository : IShoppingListRepository
         throw new NotImplementedException();
     }
 
-    public Task<ErrorOr<Success>> AddAsync(ShoppingListEntity shoppingList, CancellationToken cancellationToken = default)
+    public Task<ErrorOr<ShoppingListEntity>> AddAsync(ShoppingListEntity shoppingList, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

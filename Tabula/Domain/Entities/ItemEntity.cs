@@ -1,4 +1,3 @@
-using Domain.Errors;
 using Domain.Records;
 using Domain.Validations;
 using ErrorOr;

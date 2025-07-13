@@ -12,7 +12,7 @@ public class ShareService(IShareRepository shareRepository, IShoppingListService
 {
     public async Task<ErrorOr<Success>> ShareAsync(CreateShareCommand command, UserId userId)
     {
-        var shpList = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(command.ShoppingListId, userId, SharePermission.Modify, checkOwner: true);
+        var shpList = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(command.ShoppingListId, userId, SharePermission.Modify);
         
         if (shpList.IsError)
             return shpList.Errors;
@@ -41,7 +41,7 @@ public class ShareService(IShareRepository shareRepository, IShoppingListService
         if (shareResult.IsError)
             return shareResult.Errors;
         
-        var shpList = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(shareResult.Value.ShoppingListId, userId, SharePermission.Modify, checkOwner: true);
+        var shpList = await shoppingListService.CheckPermissionsAndGetShoppingListAsync(shareResult.Value.ShoppingListId, userId, SharePermission.Modify);
         
         if (shpList.IsError)
             return shpList.Errors;

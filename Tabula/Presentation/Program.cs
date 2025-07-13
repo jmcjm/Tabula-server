@@ -1,14 +1,14 @@
 using Domain.Interfaces;
-using Legacy.DataAccess.Database;
-using Legacy.DataAccess.Extensions;
-using Legacy.DataAccess.Services;
-using Legacy.Identity.Extensions;
-using Legacy.Identity.Endpoints;
+using Infrastructure;
 using Legacy.Identity.Database;
+using Legacy.Identity.Endpoints;
+using Legacy.Identity.Extensions;
 using Legacy.Identity.Interfaces;
+using Legacy.Identity.Services;
+using Presentation.Endpoints;
 using Tabula.Services.WebApi.Endpoints;
 
-namespace Tabula.Services.WebApi;
+namespace Presentation;
 
 public class Program
 {
@@ -18,14 +18,19 @@ public class Program
 
         // Add service defaults & Aspire client integrations.
         builder.AddServiceDefaults();
-
-        // Add services to the container.
+        
         builder.Services.AddProblemDetails();
 
-        builder.AddNpgsqlDbContext<ShoppingListDbContext>(connectionName: "TabulaDb");
+        builder.AddNpgsqlDbContext<TabulaDbContext>(connectionName: "TabulaDb");
         builder.AddNpgsqlDbContext<IdentityDatabaseContext>(connectionName: "IdentityDb");
 
-        builder.Services.AddRepositories();
+        builder.Services.AddInfrastructure();
+        
+        // Dodajemy serwisy Identity
+        builder.Services.AddScoped<IIdentityDatabaseInitializer, IdentityDatabaseInitializer>();
+        builder.Services.AddScoped<IIdentityDatabaseChecker, IdentityDatabaseChecker>();
+        
+        builder.Services.AddSwaggerAndJwtHandling(builder.Configuration);
 
         builder.Services.AddCors(options =>
         {
@@ -39,15 +44,6 @@ public class Program
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
-
-        builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
-        builder.Services.AddScoped<IDatabaseService, DatabaseChecker>();
-
-        // Dodajemy serwisy Identity
-        builder.Services.AddScoped<IIdentityDatabaseInitializer, 
-            Legacy.Identity.Services.IdentityDatabaseInitializer>();
-
-        builder.Services.AddSwaggerAndJwtHandling(builder.Configuration);
 
         var app = builder.Build();
 
@@ -67,47 +63,14 @@ public class Program
 
         app.MapControllers();
 
-        using (var scope = app.Services.CreateScope())
-        {
-            var serviceProvider = scope.ServiceProvider;
-
-            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-            var shoppingListDatabaseChecker = serviceProvider.GetRequiredService<IDatabaseService>();
-            var shoppingListDatabaseInitializer = serviceProvider.GetRequiredService<IDatabaseInitializer>();
-            var identityDatabaseInitializer = serviceProvider.GetRequiredService<IIdentityDatabaseInitializer>();
-
-            try
-            {
-                logger.LogInformation("Checking databases connections...");
-                if (await shoppingListDatabaseChecker.CheckConnectionAsync())
-                    logger.LogInformation("Database connection is successful");
-                else
-                    logger.LogError("Database connection failed");
-
-                logger.LogInformation("Initializing database...");
-                await shoppingListDatabaseChecker.InitializeAsync();
-                logger.LogInformation("Database initialization completed.");
-
-                logger.LogInformation("Initializing Identity...");
-                await identityDatabaseInitializer.InitializeAsync();
-                logger.LogInformation("Identity initialization completed.");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred during database initialization");
-                throw;
-            }
-        }
-
-        #region Endpoints
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        await DatabaseInitializer.EnsureDatabasesInitializedAsync(app.Services, logger);
 
         app.MapGroup("/shoppinglists")
             .WithTags("ShoppingLists")
             .MapShoppingListsEndpoint();
 
-        app.MapGroup("/items")
-            .WithTags("Items")
-            .MapItemsEndpoint();
+        app.MapItemsEndpoint();
 
         app.MapGroup("/auth")
             .WithTags("Authentication")
@@ -119,8 +82,6 @@ public class Program
 
         app.MapTagsEndpoints();
 
-        #endregion
-
         await app.RunAsync();
-    }
+
 }

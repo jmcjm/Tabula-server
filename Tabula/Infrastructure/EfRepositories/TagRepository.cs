@@ -1,5 +1,4 @@
 using Domain.Entities;
-using Domain.Errors;
 using Domain.Interfaces;
 using Domain.Records;
 using ErrorOr;
@@ -47,20 +46,17 @@ public class TagRepository(TabulaDbContext context, ILogger<TagRepository> logge
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
-            // If this is a unique violation, we want to return a unique error
             context.Entry(dbTag).State = EntityState.Detached;
-            return TagErrors.AlreadyExists(tagEntity.Name);
+            return Error.Conflict("Tag.AlreadyExists", "The tag already exists.");
         }
         catch (DbUpdateException ex)
         {
-            // In case of any other database errors, we want to log it and return an unexpected error
             context.Entry(dbTag).State = EntityState.Detached;
             logger.LogError(ex, "Unexpected DB error while adding tag {TagId}", tagEntity.Id);
             return Error.Unexpected(description: "Failed to save Tag.");
         }
         catch (Exception ex)
         {
-            // And in any other case, log it and re-throw
             logger.LogError(ex, "Unexpected error while adding tag {TagId}: {msg}", tagEntity.Id, ex.Message);
             throw;
         }

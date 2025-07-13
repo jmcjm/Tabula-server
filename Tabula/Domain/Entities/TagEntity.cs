@@ -1,7 +1,6 @@
 using Domain.Enums;
 using Domain.Records;
 using ErrorOr;
-using Domain.Errors;
 using Domain.Validations;
 
 namespace Domain.Entities;

@@ -1,41 +1,24 @@
 using System.Security.Claims;
+using Application.Commands;
+using Application.Interfaces;
 using Domain.Entities;
-using Domain.Interfaces;
+using Domain.Records;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Legacy.DataAccess.Enums;
+using Presentation.Helpers;
 
-namespace Tabula.Services.WebApi.Endpoints;
+namespace Presentation.Endpoints;
 
 public static class ItemsEndpoints
 {
-    public static void MapItemsEndpoint(this IEndpointRouteBuilder routes)
+    public static void MapItemsEndpoint(this WebApplication app)
     {
-        routes.MapGet("/byShoppingList/{shoppingListId:Guid}", GetItems)
-            .Produces<List<ItemEntity>>()
-            .Produces(500)
-            .WithName("GetItems")
-            .RequireAuthorization(
-                new AuthorizeAttribute
-                {
-                    Roles = "admin,user",
-                    AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}"
-                });
+        var itemsGroup = app.MapGroup("api/v1/items")
+            .WithTags("Items")
+            .WithName("Items");
 
-        routes.MapGet("/{id:Guid}", GetItem)
-            .Produces<ItemEntity>()
-            .Produces(404)
-            .Produces(500)
-            .WithName("GetItem")
-            .RequireAuthorization(
-                new AuthorizeAttribute
-                {
-                    Roles = "admin,user",
-                    AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}"
-                });
-
-        routes.MapPost("/", PostItem)
+        itemsGroup.MapPost("", PostItem)
             .Produces<ItemEntity>(201)
             .Produces(400)
             .Produces(500)
@@ -47,7 +30,7 @@ public static class ItemsEndpoints
                     AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}"
                 });
 
-        routes.MapPut("/{id:Guid}", PutItem)
+        itemsGroup.MapPut("/{id:Guid}", PutItem)
             .Produces(204)
             .Produces(400)
             .Produces(404)
@@ -60,7 +43,7 @@ public static class ItemsEndpoints
                     AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme}"
                 });
 
-        routes.MapDelete("/{id:Guid}", DeleteItem)
+        itemsGroup.MapDelete("/{id:Guid}", DeleteItem)
             .Produces(204)
             .Produces(404)
             .Produces(500)
@@ -73,71 +56,47 @@ public static class ItemsEndpoints
                 });
     }
 
-    private static async Task<IResult> GetItems(
-        [FromRoute] Guid shoppingListId,
-        [FromServices] IItemRepository itemRepository,
-        [FromServices] IShareRepository shareRepository,
+    private static async Task<IResult> PostItem(
+        [FromBody] AddItemCommand command,
+        [FromServices] IShoppingListService shoppingListService,
         ClaimsPrincipal user)
     {
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(currentUserId))
-            return TypedResults.Unauthorized();
+        var currentUserIdResult = user.GetNameIdentifier();
+
+        if (currentUserIdResult.IsError)
+            return ErrorMapper.MapErrorsToProblemResponse(currentUserIdResult, "Unauthorized");
         
-        if (!await shareRepository.HasPermissionAsync(currentUserId, shoppingListId, SharePermission.ReadOnly))
-            return TypedResults.Forbid();
-
-        var items = await itemRepository.GetAllByShoppingListIdAsync(shoppingListId);
-        return TypedResults.Ok(items);
-    }
-
-    private static async Task<IResult> GetItem(
-        [FromRoute] Guid id,
-        [FromServices] IItemRepository itemRepository)
-    {
-        var item = await itemRepository.GetByIdAsync(id);
-        return TypedResults.Ok(item);
-    }
-
-    private static async Task<IResult> PostItem(
-        [FromBody] ItemEntity itemEntity,
-        [FromServices] IItemRepository itemRepository)
-    {
-        if (string.IsNullOrEmpty(itemEntity.ProductName))
-            return TypedResults.BadRequest(new { error = "Product name is required." });
-
-        if (itemEntity.Quantity <= 0)
-            return TypedResults.BadRequest(new { error = "Quantity must be greater than 0." });
-
-        if (itemEntity.ShoppingListId == Guid.Empty)
-            return TypedResults.BadRequest(new { error = "Shopping list ID is required." });
-
-        await itemRepository.AddAsync(itemEntity);
-        return TypedResults.Created($"/items/{itemEntity.Id}", itemEntity);
+        var result = await shoppingListService.AddItemToShoppingListAsync(command, currentUserIdResult.Value);
+        return result.IsError ? ErrorMapper.MapErrorsToProblemResponse(result, "AddItem") : Results.Ok();
     }
 
     private static async Task<IResult> PutItem(
         [FromRoute] Guid id,
-        [FromBody] ItemEntity itemEntity,
-        [FromServices] IItemRepository itemRepository)
+        [FromBody] UpdateItemCommand command,
+        [FromServices] IShoppingListService shoppingListService,
+        ClaimsPrincipal user)
     {
-        if (string.IsNullOrEmpty(itemEntity.ProductName))
-            return TypedResults.BadRequest(new { error = "Product name is required." });
+        var currentUserIdResult = user.GetNameIdentifier();
 
-        if (itemEntity.Quantity <= 0)
-            return TypedResults.BadRequest(new { error = "Quantity must be greater than 0." });
-
-        if (itemEntity.ShoppingListId == Guid.Empty)
-            return TypedResults.BadRequest(new { error = "Shopping list ID is required." });
-
-        await itemRepository.UpdateAsync(itemEntity);
-        return TypedResults.NoContent();
+        if (currentUserIdResult.IsError)
+            return ErrorMapper.MapErrorsToProblemResponse(currentUserIdResult, "Unauthorized");
+        
+        var result = await shoppingListService.UpdateItemInShoppingListAsync(command with { Id = new ItemId(id) }, currentUserIdResult.Value);
+        return result.IsError ? ErrorMapper.MapErrorsToProblemResponse(result, "UpdateItem") : Results.NoContent();
     }
 
     private static async Task<IResult> DeleteItem(
         [FromRoute] Guid id,
-        [FromServices] IItemRepository itemRepository)
+        [FromServices] IShoppingListService shoppingListService,
+        ClaimsPrincipal user)
     {
-        await itemRepository.DeleteAsync(id);
-        return TypedResults.NoContent();
+        var currentUserIdResult = user.GetNameIdentifier();
+
+        if (currentUserIdResult.IsError)
+            return ErrorMapper.MapErrorsToProblemResponse(currentUserIdResult, "Unauthorized");
+        
+        var command = new DeleteItemCommand(new ItemId(id));
+        var result = await shoppingListService.DeleteItemFromShoppingListAsync(command, currentUserIdResult.Value);
+        return result.IsError ? ErrorMapper.MapErrorsToProblemResponse(result, "DeleteItem") : Results.NoContent();
     }
-} 
+}
